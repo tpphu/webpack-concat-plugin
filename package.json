@@ -1,6 +1,6 @@
 {
   "name": "webpack-concat-plugin",
-  "version": "1.4.1",
+  "version": "2.0",
   "description": "webpack file concat",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "webpack",
     "concat"
   ],
-  "author": "huangxueliang",
+  "author": "tpphu",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/hxlniada/webpack-concat-plugin/issues"
