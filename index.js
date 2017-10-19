@@ -67,7 +67,7 @@ class ConcatPlugin {
                 const allFiles = files.reduce((file1, file2) => Object.assign(file1, file2));
                 self.settings.fileName = self.getFileName(allFiles);
 
-                if (process.env.NODE_ENV === 'production' || self.settings.uglify) {
+                if (self.settings.uglify) {
                     let options = {
                         fromString: true
                     };
