@@ -72,7 +72,7 @@ class ConcatPlugin {
             return changed;
         };
 
-        compiler.plugin('emit', (compilation, callback) => {
+        compiler.plugin('done', (compilation, callback) => {
 
             compilation.fileDependencies.push(...self.filesToConcatAbsolute);
             if (!dependenciesChanged(compilation)) {
@@ -127,23 +127,6 @@ class ConcatPlugin {
                 };
 
                 callback();
-            });
-        });
-
-        compiler.plugin('compilation', compilation => {
-            compilation.plugin('html-webpack-plugin-before-html-generation', (htmlPluginData, callback) => {
-                Promise.all(concatPromise()).then(files => {
-                    const allFiles = files.reduce((file1, file2) => Object.assign(file1, file2));
-
-                    htmlPluginData.assets.webpackConcat = htmlPluginData.assets.webpackConcat || {};
-
-                    const relativePath = path.relative(htmlPluginData.outputName, self.settings.fileName)
-                        .split(path.sep).slice(1).join(path.sep);
-
-                    htmlPluginData.assets.webpackConcat[self.settings.name] = self.getFileName(allFiles, relativePath);
-
-                    callback(null, htmlPluginData);
-                });
             });
         });
     }
