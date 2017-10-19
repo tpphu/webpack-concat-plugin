@@ -1,6 +1,6 @@
 /**
  * @file webpack-concat-plugin
- * @author huangxueliang
+ * @author tpphu
  */
 const fs = require('fs');
 const UglifyJS = require('uglify-js');
@@ -59,25 +59,10 @@ class ConcatPlugin {
                 });
             })
         );
-        const dependenciesChanged = compilation => {
-            const fileTimestampsKeys = Object.keys(compilation.fileTimestamps);
-            // Since there are no time stamps, assume this is the first run and emit files
-            if (!fileTimestampsKeys.length) {
-                return true;
-            }
-            const changed = fileTimestampsKeys.filter(watchfile =>
-                (self.prevTimestamps[watchfile] || self.startTime) < (compilation.fileTimestamps[watchfile] || Infinity)
-            ).some(f => self.filesToConcatAbsolute.includes(f));
-            this.prevTimestamps = compilation.fileTimestamps;
-            return changed;
-        };
 
-        compiler.plugin('done', (compilation, callback) => {
+        compiler.plugin('done', (stats) => {
+            var compilation = stats.compilation;
 
-            compilation.fileDependencies.push(...self.filesToConcatAbsolute);
-            if (!dependenciesChanged(compilation)) {
-                return callback();
-            }
             Promise.all(concatPromise()).then(files => {
                 const allFiles = files.reduce((file1, file2) => Object.assign(file1, file2));
                 self.settings.fileName = self.getFileName(allFiles);
@@ -91,42 +76,16 @@ class ConcatPlugin {
                         options = Object.assign({}, self.settings.uglify, options);
                     }
 
-                    if (self.settings.sourceMap) {
-                        options.outSourceMap = `${self.settings.fileName.split(path.sep).slice(-1).join(path.sep)}.map`;
-                    }
-
                     const result = UglifyJS.minify(allFiles, options);
 
                     content = result.code;
-
-                    if (self.settings.sourceMap) {
-                        const mapContent = result.map.toString();
-                        compilation.assets[`${self.settings.fileName}.map`] = {
-                            source() {
-                                return mapContent;
-                            },
-                            size() {
-                                return mapContent.length;
-                            }
-                        };
-                    }
                 }
                 else {
                     content = Object.keys(allFiles)
                         .map(fileName => allFiles[fileName])
                         .reduce((content1, content2) => (`${content1}\n${content2}`), '');
                 }
-
-                compilation.assets[self.settings.fileName] = {
-                    source() {
-                        return content;
-                    },
-                    size() {
-                        return content.length;
-                    }
-                };
-
-                callback();
+                fs.writeFileSync(path.join(compilation.options.output.path, self.settings.fileName), content);
             });
         });
     }
