@@ -60,8 +60,7 @@ class ConcatPlugin {
             })
         );
 
-        compiler.plugin('done', (stats) => {
-            var compilation = stats.compilation;
+        compiler.plugin('after-emit', (compilation, callback) => {
 
             Promise.all(concatPromise()).then(files => {
                 const allFiles = files.reduce((file1, file2) => Object.assign(file1, file2));
@@ -86,6 +85,7 @@ class ConcatPlugin {
                         .reduce((content1, content2) => (`${content1}\n${content2}`), '');
                 }
                 fs.writeFileSync(path.join(compilation.options.output.path, self.settings.fileName), content);
+                callback();
             });
         });
     }
